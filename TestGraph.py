@@ -1,4 +1,5 @@
 from time import sleep
+import re;
 import serial
 import time
 
@@ -8,16 +9,18 @@ import time
 
 class TestGraph(object):
     def __init__(self):
-        ser = serial.Serial('/dev/ttyACM1', 9600) # Establish the connection on a specific port
         self.text_file = open("data.txt", "a")
+        self.ser = serial.Serial('/dev/ttyACM2', 9600) # Establish the connection on a specific port
         self.x=0
         self.y=0 
         self.fig=plt.figure(1)
         self.ax=self.fig.add_subplot(111)
-        self.ax.set_xlim(0,5)
-        self.ax.set_ylim(0,30)
+        self.ax.set_xlim(0,10)
+        self.ax.set_ylim(0,1024)
         self.line,=self.ax.plot(self.x,self.y,'ko-')
-        self.start = (float) time.time()
+        self.t_start =  time.time()
+
+        self.currentx = 10;
         
     def start(self, x, y):
         self.x = np.concatenate((self.line.get_xdata(),[x]))
@@ -28,18 +31,28 @@ class TestGraph(object):
 
     def recieve(self):
         while True:
-            input = ser.readline()
-            time = time.time()-self.start
-            self.text_file.write(input +', ' + time)
-            self.start(time, (int) input);
+            read = self.ser.readline()
+            print read;
 
-    def convert(self):
-        #need convert for accurate plotting
-        i = o;
+            read = self.parse(read)
+            c_time = int (time.time()-self.t_start)
+            if len(read) == 3:
+                print read[1]
+                self.update_x(c_time)
+                self.text_file.write("%d,%d,%d\n" %(read[1], read[2], c_time))
+                self.start(c_time, read[1])
+            
 
-    def update_x:
-        #to update the x axis of the graph if need be
-        i=0
+    def parse(self, x):
+        if x[0] == "-" and x[1] == "1":
+            readings = [int(i) for i in x.split()]
+            return readings
+        else:
+            return [0]
+    def update_x(self, x):
+        if x > self.currentx:
+            self.ax.set_xlim(0,x+10)
 
 a = TestGraph()
+a.recieve();
 
